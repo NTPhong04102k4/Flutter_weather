@@ -1,0 +1,4 @@
+name: weather_root
+description: Placeholder package metadata for nested root folder.
+publish_to: 'none'
+version: 0.0.1
