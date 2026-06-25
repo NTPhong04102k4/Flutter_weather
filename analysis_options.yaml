@@ -1,1 +1,22 @@
+# File: analysis_options.yaml
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # Loại trừ các file code tự động sinh ra (Generated code) không muốn check
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  
+  # Cấu hình mức độ nghiêm trọng của lỗi (Info, Warning, Error)
+  errors:
+    todo: info
+    invalid_annotation_target: ignore
+    missing_required_param: error # Bắt buộc phải truyền param nếu không sẽ báo đỏ compile
+
+# Nơi tùy chỉnh các rule cụ thể
+linter:
+  rules:
+    - prefer_const_declarations # Cảnh báo nếu biến có thể dùng const mà lại dùng final/var
+    - avoid_print # Cảnh báo không được dùng lệnh print() khi lên production
+    - require_trailing_commas # Bắt buộc dùng dấu phẩy cuối (Trailing Comma) - Cực kỳ quan trọng cho Prettier
+    - camel_case_types: true # Bắt buộc tên Class phải viết theo kiểu CamelCase
