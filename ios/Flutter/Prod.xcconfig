@@ -1,0 +1,5 @@
+// Cấu hình iOS cho môi trường PROD.
+#include "Generated.xcconfig"
+
+APP_DISPLAY_NAME = Weather
+PRODUCT_BUNDLE_IDENTIFIER_SUFFIX =
