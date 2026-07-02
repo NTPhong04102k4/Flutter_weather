@@ -37,6 +37,29 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // Mỗi môi trường là một product flavor: applicationId + tên app khác nhau
+    // nên có thể cài song song dev/staging/prod trên cùng một máy.
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "Weather Dev")
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "Weather Staging")
+        }
+        create("prod") {
+            dimension = "environment"
+            resValue("string", "app_name", "Weather")
+        }
+    }
 }
 
 flutter {

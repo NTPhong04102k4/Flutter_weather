@@ -5,10 +5,10 @@ import 'app.dart';
 import 'bootstrap.dart';
 import 'config/app_config.dart';
 
-/// Entry point môi trường DEV.
+/// Entry point môi trường STAGING.
 ///
-/// Chạy: `flutter run --flavor dev -t lib/main_dev.dart`
+/// Chạy: `flutter run --flavor staging -t lib/main_staging.dart`
 void main() {
-  bootstrap(Environment.dev);
+  bootstrap(Environment.staging);
   runApp(const ProviderScope(child: App()));
 }

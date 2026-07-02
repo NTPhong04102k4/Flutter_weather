@@ -1,0 +1,7 @@
+// Cấu hình iOS cho môi trường DEV.
+// Liên kết file này với build configuration "Debug-dev"/"Release-dev" trong
+// Xcode (xem ENVIRONMENT.md, mục iOS).
+#include "Generated.xcconfig"
+
+APP_DISPLAY_NAME = Weather Dev
+PRODUCT_BUNDLE_IDENTIFIER_SUFFIX = .dev
