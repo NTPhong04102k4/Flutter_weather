@@ -408,6 +408,132 @@ my_plugin/                        # App-facing package (API chung)
 
 ---
 
+## 8. FFI — Gọi Trực Tiếp C/C++ (dart:ffi) 🔥
+
+**FFI (Foreign Function Interface)** cho phép Dart gọi thẳng hàm C/C++ **trong cùng tiến trình**, không qua cầu bất đồng bộ như MethodChannel.
+
+### 8.1. FFI khác Platform Channel thế nào?
+
+| Tiêu chí | MethodChannel | FFI (`dart:ffi`) |
+|----------|--------------|------------------|
+| Gọi tới | Kotlin/Swift | Thư viện **C/C++** (`.so`, `.dylib`, `.dll`) |
+| Cơ chế | Serialize + gửi message qua platform bridge | Gọi hàm trực tiếp (như gọi hàm Dart) |
+| Đồng bộ? | **Bất đồng bộ** (`Future`) | **Đồng bộ** mặc định (nhanh, không await) |
+| Tốc độ | Có overhead serialize | Gần như native, cực nhanh |
+| Hợp cho | Gọi API hệ điều hành (pin, GPS, camera) | Thư viện tính toán C có sẵn (SQLite, mã hóa, xử lý ảnh) |
+
+> 💡 Dùng FFI khi bạn có sẵn **thư viện C/C++** muốn tái sử dụng. Dùng MethodChannel khi cần API cấp OS mà Android/iOS cung cấp qua Kotlin/Swift.
+
+### 8.2. Gọi hàm C cơ bản
+
+```c
+// native/math.c  → biên dịch thành libmath.so / libmath.dylib
+int32_t add(int32_t a, int32_t b) { return a + b; }
+```
+
+```dart
+import 'dart:ffi';
+import 'dart:io' show Platform;
+
+// 1. typedef chữ ký hàm ở phía C (Native) và phía Dart
+typedef AddNative = Int32 Function(Int32 a, Int32 b);   // kiểu FFI
+typedef AddDart   = int   Function(int a, int b);        // kiểu Dart
+
+// 2. Mở thư viện động
+final DynamicLibrary _lib = Platform.isAndroid
+    ? DynamicLibrary.open('libmath.so')
+    : DynamicLibrary.process();   // iOS: static link vào process
+
+// 3. Tra cứu hàm và ép về hàm Dart gọi được
+final AddDart add = _lib
+    .lookup<NativeFunction<AddNative>>('add')
+    .asFunction<AddDart>();
+
+void main() {
+  print(add(3, 4));   // 7 — gọi đồng bộ, không cần await
+}
+```
+
+### 8.3. Con trỏ, chuỗi & bộ nhớ (package `ffi`)
+
+C dùng con trỏ và cấp phát thủ công → phải tự `allocate` và `free`:
+
+```dart
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';   // dependency: ffi
+
+// C: char* greet(char* name);
+typedef GreetNative = Pointer<Utf8> Function(Pointer<Utf8> name);
+typedef GreetDart   = Pointer<Utf8> Function(Pointer<Utf8> name);
+
+final greet = _lib.lookupFunction<GreetNative, GreetDart>('greet');
+
+String callGreet(String name) {
+  final namePtr = name.toNativeUtf8();          // Dart String → char* (malloc)
+  try {
+    final resultPtr = greet(namePtr);
+    return resultPtr.toDartString();            // char* → Dart String
+  } finally {
+    malloc.free(namePtr);                       // BẮT BUỘC free → tránh leak
+  }
+}
+```
+
+### 8.4. Struct C
+
+```dart
+// C: struct Point { double x; double y; };
+final class Point extends Struct {
+  @Double()
+  external double x;
+  @Double()
+  external double y;
+}
+
+// Cấp phát struct trên native heap
+final p = malloc<Point>();
+p.ref.x = 1.0;
+p.ref.y = 2.0;
+// ... truyền p vào hàm C ...
+malloc.free(p);
+```
+
+### 8.5. Sinh binding tự động với `ffigen`
+
+Viết typedef tay dễ sai. `ffigen` đọc header `.h` và **generate toàn bộ binding**:
+
+```yaml
+# pubspec.yaml
+dev_dependencies:
+  ffigen: ^11.0.0
+
+# ffigen.yaml
+name: NativeBindings
+output: 'lib/native_bindings.dart'
+headers:
+  entry-points:
+    - 'native/math.h'
+```
+
+```bash
+dart run ffigen   # → sinh lib/native_bindings.dart
+```
+
+### 8.6. FFI nặng & Isolate — tránh block UI
+
+FFI gọi **đồng bộ** → hàm C chạy lâu sẽ **đứng UI thread**. Việc nặng → đẩy sang Isolate:
+
+```dart
+// Chạy hàm C nặng trong isolate riêng để giữ UI mượt
+final result = await Isolate.run(() => heavyNativeCompute(input));
+```
+
+> ⚠️ Không thể gửi thẳng `Pointer` qua port giữa isolate (địa chỉ bộ nhớ không hợp lệ ở isolate khác). Truyền **dữ liệu** (số, `Uint8List`) và mở/lookup thư viện lại bên trong isolate đó.
+
+Chiều ngược lại — **C gọi lại Dart** (callback từ luồng native) dùng `NativeCallable.listener` (Dart 3.1+) để an toàn giữa các luồng.
+
+---
+
 ## 📝 Bài Tập Thực Hành
 
 ### Bài 1: Battery Info
@@ -418,6 +544,9 @@ Tạo MethodChannel copy/paste text qua native clipboard API.
 
 ### Bài 3: Sensor Stream
 Dùng EventChannel stream dữ liệu accelerometer từ native. Hiển thị real-time trong Flutter.
+
+### Bài 4: FFI Calculator
+Viết hàm C `int add(int, int)` + `int fib(int)`, biên dịch thành thư viện động, gọi qua `dart:ffi`. So sánh thời gian gọi `fib(40)` trực tiếp (block UI) vs bọc trong `Isolate.run`.
 
 ---
 

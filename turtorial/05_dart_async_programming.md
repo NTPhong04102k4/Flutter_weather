@@ -491,40 +491,125 @@ void main() async {
 }
 ```
 
-### Isolate với giao tiếp 2 chiều
+### 8.1. Cổng giao tiếp: ReceivePort ↔ SendPort (port-to-port)
+
+Isolate **không chia sẻ bộ nhớ**. Chúng chỉ trao đổi qua **cổng (port)** theo mô hình *message passing*:
+
+```
+  Main Isolate                          Worker Isolate
+  ┌───────────────┐                     ┌───────────────┐
+  │ ReceivePort   │◄──── sendPort ──────│  send(result) │   worker → main
+  │  .sendPort ───┼──── truyền lúc ─────►│ ReceivePort   │
+  │               │      spawn          │  .sendPort    │   main → worker
+  └───────────────┘                     └───────────────┘
+```
+
+- **`ReceivePort`** = hộp thư *nhận* (mình đọc từ đây, nó là 1 `Stream`).
+- **`SendPort`** = tay cầm để *gửi* vào `ReceivePort` của người khác.
+- Muốn giao tiếp **2 chiều**: mỗi bên tạo `ReceivePort` riêng, rồi **gửi `SendPort` của mình cho bên kia** (gọi là *handshake*).
+
+### 8.2. Worker 2 chiều hoàn chỉnh (handshake + nhận kết quả)
 
 ```dart
 import 'dart:isolate';
 
-void workerIsolate(SendPort sendPort) {
-  var receivePort = ReceivePort();
-  sendPort.send(receivePort.sendPort);
+void workerIsolate(SendPort mainSendPort) {
+  final workerReceive = ReceivePort();
+  // HANDSHAKE: gửi sendPort của worker về main để main biết gửi việc vào đâu
+  mainSendPort.send(workerReceive.sendPort);
 
-  receivePort.listen((message) {
+  workerReceive.listen((message) {
     if (message is int) {
-      // Tính toán nặng
-      var result = message * message;
-      sendPort.send(result);
+      final result = message * message;   // "công việc nặng"
+      mainSendPort.send(result);          // trả kết quả về main
     }
   });
 }
 
 void main() async {
-  var receivePort = ReceivePort();
-  await Isolate.spawn(workerIsolate, receivePort.sendPort);
+  final mainReceive = ReceivePort();
+  await Isolate.spawn(workerIsolate, mainReceive.sendPort);
 
-  // Lấy SendPort của worker
-  SendPort workerSendPort = await receivePort.first as SendPort;
+  // mainReceive nhận NHIỀU loại message → tách stream thành broadcast để đọc chọn lọc
+  final broadcast = mainReceive.asBroadcastStream();
 
-  // Giao tiếp 2 chiều
-  var responsePort = ReceivePort();
+  // 1. Message ĐẦU TIÊN chính là SendPort của worker (handshake)
+  final SendPort workerSendPort = await broadcast.first as SendPort;
+
+  // 2. Gửi việc + chờ kết quả
   workerSendPort.send(42);
+  final result = await broadcast.firstWhere((m) => m is int);
+  print('Kết quả từ worker: $result');   // 1764
 
-  // Chờ kết quả...
+  mainReceive.close();   // đóng cổng khi xong
 }
 ```
 
-> 💡 **Trong Flutter**, dùng `compute()` function — wrapper đơn giản hơn `Isolate.run()`.
+### 8.3. Chia sẻ dữ liệu main ↔ worker — dữ liệu được COPY, không share RAM
+
+> ⚠️ Khác Java/C++ thread: gửi 1 object qua port → Dart **deep-copy** sang isolate kia. Sửa ở worker **KHÔNG** ảnh hưởng bản ở main. Không có biến dùng chung.
+
+**Gửi được**: `null`, số, bool, `String`, `List`/`Map`/`Set` (các phần tử cũng phải gửi được), `TypedData` (Uint8List...), `SendPort`, và bản ghi/`record`.
+**KHÔNG gửi được**: closure bắt biến ngoài phức tạp, `Socket`, `File` handle, object giữ tài nguyên native.
+
+Với **dữ liệu lớn** (ảnh, buffer byte), copy tốn kém → dùng `TransferableTypedData` để **chuyển quyền sở hữu (zero-copy)**:
+
+```dart
+import 'dart:isolate';
+import 'dart:typed_data';
+
+// Worker tạo buffer lớn rồi "chuyển" (không copy) về main
+void worker(SendPort main) {
+  final bytes = Uint8List(10 * 1024 * 1024);   // 10MB
+  final transfer = TransferableTypedData.fromList([bytes]);
+  main.send(transfer);   // O(1), không copy 10MB
+}
+
+// Main nhận:
+// final t = await port.first as TransferableTypedData;
+// final Uint8List data = t.materialize().asUint8List(); // lấy lại buffer
+```
+
+### 8.4. Request–Response có khớp id (worker phục vụ nhiều yêu cầu)
+
+Khi gửi nhiều việc cùng lúc, gắn `id` để biết kết quả nào ứng với yêu cầu nào:
+
+```dart
+void worker(SendPort main) {
+  final rx = ReceivePort();
+  main.send(rx.sendPort);
+  rx.listen((msg) {
+    final (int id, int value) = msg as (int, int);   // record (id, data)
+    main.send((id, value * value));                   // trả kèm id
+  });
+}
+
+// Main: giữ map id → Completer, ai có kết quả thì complete đúng future
+final _pending = <int, Completer<int>>{};
+int _seq = 0;
+Future<int> compute(SendPort worker, int value) {
+  final id = _seq++;
+  final c = Completer<int>();
+  _pending[id] = c;
+  worker.send((id, value));
+  return c.future;   // main.listen sẽ gọi _pending[id]!.complete(result)
+}
+```
+
+### 8.5. Chọn cách nào?
+
+| Cách | Dùng khi | Ghi chú |
+|------|----------|---------|
+| `compute(fn, arg)` (Flutter) | Chạy **1 lần**, việc nặng ngắn hạn | Wrapper gọn nhất, tự spawn + kill |
+| `Isolate.run(() => ...)` (Dart 2.19+) | Như trên, thuần Dart | Không cần Flutter |
+| `Isolate.spawn` + ports | **Worker sống lâu**, xử lý nhiều request | Phải tự quản lý port & `kill()` |
+
+```dart
+// Flutter — 90% trường hợp chỉ cần dòng này:
+final result = await compute(heavyComputation, 40);
+```
+
+> 💡 `compute`/`Isolate.run` phù hợp việc nặng chạy một lần (parse JSON lớn, xử lý ảnh). Cần worker thường trú (giải mã liên tục, pipeline) mới dùng `Isolate.spawn` + ports như 8.2–8.4.
 
 ---
 
