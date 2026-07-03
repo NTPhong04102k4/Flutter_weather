@@ -1,0 +1,6 @@
+{
+  "gitlens.ai.defaultAgent": "",
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": true
+  }
+}

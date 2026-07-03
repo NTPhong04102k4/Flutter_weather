@@ -19,25 +19,20 @@ Kiểu dữ liệu trong Dart
 ├── List<T>     — Danh sách (mảng)
 ├── Set<T>      — Tập hợp (không trùng lặp)
 ├── Map<K,V>    — Bảng ánh xạ key-value
-├── Runes       — Unicode characters
+├── Runes       — Unicode code points
 ├── Symbol      — Ký hiệu (ít dùng)
-├── Null        — Giá trị null
-├── dynamic     — Kiểu động (bất kỳ)
-├── Object      — Kiểu cha của mọi object
-└── void        — Không trả về giá trị
-└── var, final, const — Khai báo biến (sẽ học sau)
-└── Object?     — Kiểu có thể null (sẽ học sau)
-└── Never       — Kiểu không bao giờ trả về giá trị
-└── ?           — Toán tử null-aware (sẽ học sau)
-└── ??          — Toán tử null-aware (sẽ học sau)
-└── ??=         — Toán tử null-aware (sẽ học sau)
-└── !           — Toán tử null-aware (sẽ học sau)
-└── ?.          — Toán tử null-aware (sẽ học sau)
-└── ?:          — Toán tử null-aware (sẽ học sau)
-
-check biến _variable và variable 
-
+├── Null        — Kiểu của giá trị null
+├── Object      — Kiểu cha của MỌI object (non-nullable)
+├── Object?     — Kiểu cha thật sự (cho phép null)
+├── dynamic     — Kiểu động (tắt type-check)
+├── void        — Không quan tâm giá trị trả về
+└── Never       — Không bao giờ trả về (luôn throw / vòng lặp vô tận)
 ```
+
+> **Ghi chú các nhóm từ khoá liên quan** (sẽ học chi tiết ở các mục/bài sau):
+> - **Khai báo biến**: `var`, `final`, `const`, `late`, `dynamic` → mục 7 bên dưới.
+> - **Null-aware operators**: `?`, `??`, `??=`, `!`, `?.`, `?[]`, `...?` → [Bài 02](./02_dart_operators_and_control_flow.md).
+> - **Public vs private**: tên bắt đầu bằng `_` là private → xem mục 7.8 bên dưới.
 
 ---
 
@@ -495,6 +490,46 @@ void main() {
 | Ví dụ | `var x = 1;` | `final x = DateTime.now();` | `const x = 3.14;` |
 
 > **Quy tắc vàng**: Ưu tiên dùng `const` > `final` > `var`. Dùng cái nào nghiêm ngặt nhất có thể.
+
+### 7.8. `variable` vs `_variable` — Public vs Private 🔥
+
+Dart **không có** từ khoá `public` / `private` / `protected`. Thay vào đó, Dart dùng **quy ước đặt tên**: tên bắt đầu bằng dấu gạch dưới `_` là **private**.
+
+```dart
+// file: user.dart
+class User {
+  String name = 'Phong';   // public  — truy cập từ file khác được
+  int _age = 25;           // private — CHỈ truy cập trong file user.dart
+
+  void greet() => print('Hi $name');   // public method
+  void _log() => print('internal');    // private method
+}
+
+// Biến/hàm cấp file (top-level) cũng theo quy ước này
+String appName = 'Weather';   // public
+String _secretKey = 'abc123'; // private — chỉ dùng trong file này
+```
+
+```dart
+// file: main.dart
+import 'user.dart';
+
+void main() {
+  var u = User();
+  print(u.name);   // ✅ OK — public
+  // print(u._age); // ❌ Lỗi! _age là private, không thấy từ file khác
+}
+```
+
+| | `variable` (không có `_`) | `_variable` (có `_`) |
+|:--|:--|:--|
+| Phạm vi | Public — mọi file import đều dùng được | Private — chỉ trong **cùng file (library)** |
+| Dùng cho | API công khai của class/thư viện | Chi tiết nội bộ, state, helper |
+| Ví dụ | `name`, `count`, `build()` | `_balance`, `_controller`, `_onTap()` |
+
+> ⚠️ **Điểm dễ nhầm**: `_` là private ở **cấp library (file)**, KHÔNG phải cấp class. Trong **cùng một file**, hai class vẫn truy cập được biến `_` của nhau. Xem thêm ở [Bài 03 — Access Modifiers](./03_dart_functions_and_oop.md).
+>
+> 💡 Ngoài ra, `_` một mình (không có tên) là **biến "vứt đi"** (throwaway) — dùng khi bạn không quan tâm giá trị: `list.map((_) => 0)`, `onTap: (_) {}`.
 
 ---
 

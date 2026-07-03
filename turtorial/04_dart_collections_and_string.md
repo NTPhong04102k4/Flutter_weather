@@ -463,6 +463,82 @@ void main() {
 
 ---
 
+## 7. Bảng Tra Cứu Method (Cheat Sheet) 🔖
+
+### 7.1. String methods
+
+| Method | Mô tả | Ví dụ → Kết quả |
+|:--|:--|:--|
+| `.length` | Số ký tự | `'abc'.length` → `3` |
+| `.isEmpty` / `.isNotEmpty` | Rỗng / không rỗng | `''.isEmpty` → `true` |
+| `.toUpperCase()` / `.toLowerCase()` | Đổi hoa/thường | `'Hi'.toUpperCase()` → `'HI'` |
+| `.trim()` / `.trimLeft()` / `.trimRight()` | Bỏ khoảng trắng | `' a '.trim()` → `'a'` |
+| `.substring(s, [e])` | Cắt chuỗi con | `'Hello'.substring(1,3)` → `'el'` |
+| `.split(sep)` | Tách thành List | `'a,b'.split(',')` → `['a','b']` |
+| `.replaceAll(a, b)` / `.replaceFirst(a, b)` | Thay thế | `'aa'.replaceAll('a','b')` → `'bb'` |
+| `.contains(s)` | Có chứa không | `'abc'.contains('b')` → `true` |
+| `.startsWith(s)` / `.endsWith(s)` | Bắt đầu/kết thúc | `'abc'.startsWith('a')` → `true` |
+| `.indexOf(s)` / `.lastIndexOf(s)` | Vị trí | `'aba'.indexOf('a')` → `0` |
+| `.padLeft(n, c)` / `.padRight(n, c)` | Đệm ký tự | `'5'.padLeft(3,'0')` → `'005'` |
+| `.compareTo(s)` | So sánh (sort) | `'a'.compareTo('b')` → `-1` |
+| `.codeUnits` / `.runes` | Mã ký tự / Unicode | `'A'.codeUnits` → `[65]` |
+| `int.parse(s)` / `int.tryParse(s)` | String → số | `int.parse('42')` → `42` |
+
+### 7.2. List<T> methods (mảng / array)
+
+| Method | Mô tả | Ghi chú |
+|:--|:--|:--|
+| `.add(x)` / `.addAll(xs)` | Thêm cuối | mutate |
+| `.insert(i, x)` / `.insertAll(i, xs)` | Thêm tại index | mutate |
+| `.remove(x)` / `.removeAt(i)` / `.removeLast()` | Xoá | mutate |
+| `.removeWhere((x) => …)` | Xoá theo điều kiện | mutate |
+| `.clear()` | Xoá hết | mutate |
+| `.sort([cmp])` / `.shuffle()` | Sắp xếp / xáo trộn | mutate |
+| `[i]` · `.first` · `.last` · `.length` | Đọc | |
+| `.indexOf(x)` / `.lastIndexOf(x)` / `.contains(x)` | Tìm | |
+| `.firstWhere(f, {orElse})` / `.lastWhere` / `.indexWhere(f)` | Tìm theo điều kiện | |
+| `.map(f)` | Biến đổi từng phần tử | → `Iterable` (lazy) |
+| `.where(f)` | Lọc | → `Iterable` (lazy) |
+| `.reduce(f)` / `.fold(init, f)` | Gộp về 1 giá trị | |
+| `.any(f)` / `.every(f)` | Có/mọi phần tử thoả | → `bool` |
+| `.expand(f)` | flatMap (trải phẳng) | |
+| `.take(n)` / `.skip(n)` / `.takeWhile(f)` / `.skipWhile(f)` | Cắt đầu/cuối | |
+| `.reversed` | Đảo ngược | → `Iterable`, KHÔNG mutate |
+| `.sublist(s, [e])` / `.getRange(s, e)` | Cắt đoạn | |
+| `.join([sep])` | Nối thành String | `[1,2].join('-')` → `'1-2'` |
+| `.asMap()` / `.indexed` | Kèm index | `.indexed` = Dart 3.0+ |
+| `.toList()` / `.toSet()` | Chuyển đổi | |
+
+> ⚠️ `map`/`where`/`expand`/`take`... trả về **`Iterable` lazy** — nhớ `.toList()` khi cần List thật.
+
+### 7.3. Set<T> methods
+
+| Method | Mô tả |
+|:--|:--|
+| `.add(x)` / `.addAll(xs)` / `.remove(x)` | Thêm/xoá (bỏ qua trùng) |
+| `.contains(x)` / `.length` | Kiểm tra |
+| `.union(b)` | Hợp `a ∪ b` |
+| `.intersection(b)` | Giao `a ∩ b` |
+| `.difference(b)` | Hiệu `a − b` |
+| `list.toSet()` | Loại bỏ phần tử trùng |
+
+### 7.4. Map<K, V> methods
+
+| Method | Mô tả | Ghi chú |
+|:--|:--|:--|
+| `map[key]` | Đọc giá trị | trả về `V?` (có thể null) |
+| `map[key] = v` | Thêm/cập nhật | |
+| `.putIfAbsent(k, () => v)` | Thêm nếu chưa có | không ghi đè |
+| `.update(k, (old) => new, {ifAbsent})` | Cập nhật theo giá trị cũ | |
+| `.remove(k)` / `.removeWhere((k,v) => …)` | Xoá | |
+| `.containsKey(k)` / `.containsValue(v)` | Kiểm tra | |
+| `.keys` / `.values` / `.entries` | Lấy tập key/value/cặp | → `Iterable` |
+| `.forEach((k, v) => …)` | Duyệt | |
+| `.map((k, v) => MapEntry(…))` | Biến đổi | → `Map` mới |
+| `.length` / `.isEmpty` | Thông tin | |
+
+---
+
 ## 📝 Bài Tập Thực Hành
 
 ### Bài 1: Xử lý List

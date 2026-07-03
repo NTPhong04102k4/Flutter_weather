@@ -629,6 +629,63 @@ Widget build(BuildContext context) {
 
 ---
 
+## 9. Các "Từ Khoá" Mở Rộng Của Flutter 🔖
+
+Flutter không thêm từ khoá mới vào Dart, nhưng có một bộ **định danh/quy ước xuất hiện dày đặc** mà bạn phải quen. Xem như "từ khoá của Flutter":
+
+| Định danh | Bản chất | Vai trò |
+|:--|:--|:--|
+| `Widget` | class | Đơn vị UI cơ bản — mọi thứ đều là Widget |
+| `StatelessWidget` / `StatefulWidget` | class | Widget không / có state |
+| `State<T>` | class | Nơi giữ state cho `StatefulWidget` |
+| `build(BuildContext context)` | method | Trả về cây widget để render — gọi mỗi lần rebuild |
+| `BuildContext` | class | "Vị trí" của widget trong cây — dùng để tra Theme, Navigator... |
+| `setState(() {...})` | method | Báo Flutter "state đổi → rebuild" |
+| `super.key` / `Key` | tham số | Định danh widget giúp Flutter tái sử dụng đúng widget |
+| `required` | từ khoá Dart | Tham số bắt buộc trong constructor widget |
+| `const` (constructor) | từ khoá Dart | Widget bất biến → Flutter bỏ qua rebuild, tối ưu hiệu năng |
+| `@override` | annotation | Ghi đè `build`, `initState`, `dispose`... |
+| `child` / `children` | tham số | Widget con (một / nhiều) |
+| `context` | biến | Thường là `BuildContext` được truyền vào `build` |
+| `mounted` | getter | `true` nếu State còn trong cây — check trước `setState` sau `await` |
+
+### Lifecycle & annotation hay gặp
+
+```dart
+class MyWidget extends StatefulWidget {
+  const MyWidget({super.key, required this.title});   // const + super.key + required
+
+  final String title;
+
+  @override
+  State<MyWidget> createState() => _MyWidgetState();  // @override
+}
+
+class _MyWidgetState extends State<MyWidget> {        // _ = private State
+  @override
+  void initState() {                                  // gọi 1 lần khi tạo
+    super.initState();
+  }
+
+  @override
+  void dispose() {                                    // dọn dẹp controller/timer
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {                // rebuild UI
+    // widget.title → truy cập property của StatefulWidget từ State
+    return Text(widget.title);
+  }
+}
+```
+
+> 💡 **`const` widget = tối ưu miễn phí**: khai báo widget `const` khi tất cả tham số là hằng → Flutter tái sử dụng instance cũ, không rebuild thừa.
+>
+> 💡 **`widget.` trong State**: bên trong `State`, truy cập property của `StatefulWidget` qua `widget.xxx` (vì chúng nằm ở 2 class khác nhau).
+
+---
+
 ## 📝 Bài Tập Thực Hành
 
 ### Bài 1: Profile Card

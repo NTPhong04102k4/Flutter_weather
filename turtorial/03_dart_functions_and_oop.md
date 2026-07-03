@@ -790,6 +790,52 @@ void main() {
 }
 ```
 
+### 17.1. Bộ từ khoá "class modifiers" (Dart 3.0+)
+
+`sealed` chỉ là một trong nhóm từ khoá điều khiển **cách một class được kế thừa / triển khai**. Đặt trước `class`:
+
+| Modifier | Cho `extends`? | Cho `implements`? | Ý nghĩa |
+|:--|:--:|:--:|:--|
+| *(không có)* | ✅ | ✅ | Mặc định — thoải mái kế thừa/triển khai |
+| `abstract` | ✅ | ✅ | Không thể tạo instance trực tiếp |
+| `base` | ✅ (cùng lib nếu ngoài) | ❌ | Buộc mọi lớp con phải `extends` (giữ được state/impl) |
+| `interface` | ❌ (ngoài lib) | ✅ | Chỉ dùng làm interface — bên ngoài chỉ `implements` |
+| `final` | ❌ | ❌ | "Đóng" hoàn toàn — không cho kế thừa/triển khai ở lib khác |
+| `sealed` | ❌ (ngoài lib) | ❌ | Biết trước MỌI lớp con → `switch` exhaustive |
+| `mixin class` | — | — | Vừa dùng như class, vừa dùng như mixin (`with`) |
+
+```dart
+// interface class — bên ngoài file CHỈ được implements, không extends
+interface class Logger {
+  void log(String msg) => print(msg);
+}
+
+// base class — buộc lớp con phải extends (không cho implements từ lib khác)
+base class Repository {
+  void save() {}
+}
+
+// final class — chốt lại, không ai kế thừa được nữa
+final class AppConfig {
+  final String env;
+  AppConfig(this.env);
+}
+
+// mixin class — dùng được cả 2 cách
+mixin class Reusable {
+  void reuse() => print('reused');
+}
+
+class A extends Reusable {}        // dùng như class cha
+class B with Reusable {}           // dùng như mixin
+```
+
+> **Khi nào dùng gì?**
+> - `sealed` → mô hình hoá tập hữu hạn trạng thái (`Result` = Success/Failure/Loading) và muốn `switch` bắt lỗi khi thiếu case.
+> - `final` → API public bạn không muốn người khác kế thừa (dễ bảo trì).
+> - `base` → muốn cho kế thừa nhưng cấm `implements` (bảo toàn logic nội bộ).
+> - `interface` → chỉ định nghĩa "hợp đồng", để người khác `implements`.
+
 ---
 
 ## 18. Generics

@@ -493,9 +493,91 @@ void main() {
 }
 ```
 
+### 11.6. Tổng hợp các loại vòng `for`
+
+| Loại | Cú pháp | Khi nào dùng |
+|:--|:--|:--|
+| `for` cổ điển | `for (init; cond; step)` | Cần chỉ số `i`, bước nhảy, đếm ngược |
+| `for-in` | `for (var x in iterable)` | Duyệt List/Set/Map.entries, không cần index |
+| `for-in` + `.entries` | `for (var e in map.entries)` | Duyệt `Map` theo key/value |
+| `for-in` + `.indexed` | `for (var (i, x) in list.indexed)` | Cần **cả index lẫn giá trị** (Dart 3.0+) |
+| Collection `for` | `[for (var x in xs) x * 2]` | Sinh List/Set/Map mới ngay khi khai báo |
+| `forEach` | `xs.forEach((x) { ... })` | Ngắn gọn, nhưng **không** dùng được `break`/`continue`/`await` |
+| `await for` | `await for (var x in stream)` | Duyệt `Stream` bất đồng bộ ([Bài 05](./05_dart_async_programming.md)) |
+
+```dart
+void main() {
+  var fruits = ['Táo', 'Cam', 'Xoài'];
+
+  // .indexed — lấy cả index lẫn value (Dart 3.0+), thay cho asMap()
+  for (var (index, fruit) in fruits.indexed) {
+    print('$index: $fruit');   // 0: Táo, 1: Cam, 2: Xoài
+  }
+}
+```
+
 ---
 
-## 12. Bảng Tổng Hợp Toán Tử
+## 12. Các Từ Khoá Điều Khiển Khác (ngoài `switch/case`)
+
+Ngoài `if`, `switch`, vòng lặp, Dart còn một số từ khoá điều khiển luồng quan trọng:
+
+```dart
+import 'dart:async';
+
+// return — trả về giá trị và thoát khỏi hàm
+int add(int a, int b) {
+  return a + b;   // dừng hàm ngay tại đây
+}
+
+// assert — kiểm tra điều kiện (CHỈ chạy ở debug mode, bị bỏ qua khi release)
+void setAge(int age) {
+  assert(age >= 0, 'Tuổi không được âm');   // crash sớm khi dev sai
+}
+
+// throw / rethrow — ném lỗi (chi tiết ở Bài 06)
+void checkPositive(int n) {
+  if (n < 0) throw ArgumentError('n phải >= 0');
+}
+
+// yield / yield* — sinh giá trị cho generator (Iterable/Stream)
+Iterable<int> countTo(int n) sync* {
+  for (int i = 1; i <= n; i++) {
+    yield i;          // "nhả" ra 1 giá trị mỗi vòng
+  }
+}
+
+Stream<int> asyncCount(int n) async* {
+  for (int i = 1; i <= n; i++) {
+    yield i;          // nhả giá trị cho Stream
+  }
+}
+
+void main() async {
+  print(countTo(3).toList());   // [1, 2, 3]
+}
+```
+
+> - `sync*` + `yield` → tạo `Iterable` (lazy). `async*` + `yield` → tạo `Stream`. Xem [Bài 05](./05_dart_async_programming.md).
+> - `try` / `catch` / `on` / `finally` / `rethrow` → xử lý lỗi, xem [Bài 06](./06_dart_error_handling.md).
+
+### Bảng tra cứu từ khoá Dart (Keywords)
+
+| Nhóm | Từ khoá |
+|:--|:--|
+| Khai báo biến | `var` · `final` · `const` · `late` · `dynamic` · `void` |
+| Kiểu & lớp | `class` · `enum` · `extension` · `typedef` · `mixin` · `abstract` · `interface` · `base` · `sealed` · `Function` |
+| Kế thừa | `extends` · `implements` · `with` · `on` · `super` · `this` · `covariant` |
+| Điều kiện/lặp | `if` · `else` · `switch` · `case` · `default` · `for` · `in` · `while` · `do` · `break` · `continue` |
+| Pattern (Dart 3) | `when` · `_` (wildcard) · `\|\|` · `&&` (trong pattern) |
+| Rẽ nhánh/lỗi | `return` · `throw` · `rethrow` · `try` · `catch` · `on` · `finally` · `assert` |
+| Bất đồng bộ | `async` · `await` · `async*` · `await for` · `sync*` · `yield` · `yield*` |
+| Kiểm tra kiểu | `is` · `is!` · `as` |
+| Khác | `new` (không cần nữa) · `factory` · `get` · `set` · `static` · `external` · `required` |
+
+---
+
+## 13. Bảng Tổng Hợp Toán Tử
 
 | Loại | Toán tử | Ví dụ |
 |:-----|:--------|:------|

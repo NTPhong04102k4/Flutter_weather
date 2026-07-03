@@ -6,7 +6,7 @@ class AppConstants {
   const AppConstants._();
 
   /// Tên app (hiển thị, log).
-  static const String appName = 'Weather';
+  static const String appName = 'Personal Internal';
 
   /// Base URL của API thời tiết.
   ///
