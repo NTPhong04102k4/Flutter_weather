@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/app_config.dart';
-import '../../../core/core.dart';
+import 'package:weather/config/app_config.dart';
+import 'package:weather/core/core.dart';
 
 /// Màn hình chủ tạm thời — minh hoạ cách feature TIÊU THỤ tầng core.
 ///

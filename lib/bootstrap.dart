@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-import 'config/app_config.dart';
-import 'core/core.dart';
+import 'package:weather/config/app_config.dart';
+import 'package:weather/core/core.dart';
 
 /// Phần khởi tạo DÙNG CHUNG cho mọi entry point.
 ///

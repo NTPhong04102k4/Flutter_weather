@@ -1,4 +1,4 @@
-import 'failure.dart';
+import 'package:weather/core/error/failure.dart';
 
 /// Kiểu trả về an toàn: HOẶC dữ liệu thành công ([Ok]) HOẶC lỗi ([Err]).
 ///
@@ -28,21 +28,18 @@ sealed class Result<T> {
 
   /// Lấy giá trị nếu thành công, ngược lại trả về `null`.
   T? get valueOrNull => switch (this) {
-        Ok<T>(:final value) => value,
-        Err<T>() => null,
-      };
+    Ok<T>(:final value) => value,
+    Err<T>() => null,
+  };
 
   /// Biến đổi giá trị bên trong khi thành công, giữ nguyên lỗi.
   Result<R> map<R>(R Function(T value) transform) => switch (this) {
-        Ok<T>(:final value) => Ok<R>(transform(value)),
-        Err<T>(:final failure) => Err<R>(failure),
-      };
+    Ok<T>(:final value) => Ok<R>(transform(value)),
+    Err<T>(:final failure) => Err<R>(failure),
+  };
 
   /// Gập hai nhánh về một giá trị duy nhất.
-  R fold<R>(
-    R Function(T value) onOk,
-    R Function(Failure failure) onErr,
-  ) =>
+  R fold<R>(R Function(T value) onOk, R Function(Failure failure) onErr) =>
       switch (this) {
         Ok<T>(:final value) => onOk(value),
         Err<T>(:final failure) => onErr(failure),

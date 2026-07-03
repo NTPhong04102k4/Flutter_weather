@@ -1,22 +1,65 @@
-# File: analysis_options.yaml
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  # Loại trừ các file code tự động sinh ra (Generated code) không muốn check
+  # Kích hoạt kiểm tra kiểu dữ liệu nghiêm ngặt (Strict Mode)
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  # Loại trừ các file code tự động sinh ra (Generated code)
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - "lib/generated/**" # Nếu bạn có dùng phần mềm sinh code bản địa hóa (intl)
   
   # Cấu hình mức độ nghiêm trọng của lỗi (Info, Warning, Error)
   errors:
     todo: info
     invalid_annotation_target: ignore
     missing_required_param: error # Bắt buộc phải truyền param nếu không sẽ báo đỏ compile
+    dead_code: warning
+    unused_local_variable: warning
 
 # Nơi tùy chỉnh các rule cụ thể
 linter:
   rules:
+    # --- Rules bạn đã chọn (Sửa lại cú pháp chuẩn) ---
     - prefer_const_declarations # Cảnh báo nếu biến có thể dùng const mà lại dùng final/var
     - avoid_print # Cảnh báo không được dùng lệnh print() khi lên production
-    - require_trailing_commas # Bắt buộc dùng dấu phẩy cuối (Trailing Comma) - Cực kỳ quan trọng cho Prettier
-    - camel_case_types: true # Bắt buộc tên Class phải viết theo kiểu CamelCase
+    - require_trailing_commas # Bắt buộc dùng dấu phẩy cuối (Cực kỳ quan trọng để auto-format đẹp)
+    - camel_case_types # Bắt buộc tên Class phải viết theo kiểu CamelCase
+    - always_declare_return_types # Luôn khai báo kiểu trả về cho hàm/phương thức
+    - always_put_control_body_on_new_line # Đưa nội dung if/else/for xuống dòng mới nếu không dùng block {}
+
+    # --- Các Rules bổ sung "Sống Còn" cho dự án Flutter chuyên nghiệp ---
+    - always_use_package_imports # Bắt buộc dùng base path (package:your_app/...) thay vì ../../
+    - avoid_empty_else # Tránh viết block else rỗng
+    - avoid_relative_lib_imports # Ngăn chặn việc import tương đối ngoài thư mục lib
+    - avoid_slow_async_io # Cảnh báo nếu dùng thư viện IO đồng bộ gây block UI
+    - avoid_types_as_parameter_names # Tránh viết kiểu dữ liệu trùng tên parameter
+    - await_only_futures # Chỉ dùng await cho các hàm trả về Future
+    - cancel_subscriptions # Bắt buộc phải cancel StreamSubscription để tránh memory leak
+    - close_sinks # Bắt buộc close các Sink (StreamController) để tránh tràn bộ nhớ
+    - empty_catches # Không được bỏ trống block catch (phải log hoặc xử lý lỗi)
+    - no_duplicate_case_values # Tránh trùng lặp giá trị trong các câu lệnh switch-case
+    - prefer_conditional_assignment # Khuyên dùng toán tử ??= thay vì check null dài dòng
+    - prefer_const_constructors # Ép dùng const constructor cho Widget để tối ưu hóa hiệu năng render
+    - prefer_const_constructors_in_immutables # Các class Immutable (như Widget) nên có const constructor
+    - prefer_final_locals # Khuyên dùng 'final' cho các biến cục bộ nếu không thay đổi giá trị
+    - unawaited_futures # Cảnh báo nếu một Future chạy mà không được await hoặc unawaited()
+    - unawaited_futures_within_async # Tương tự như trên bên trong hàm async
+    - unnecessary_await_in_return # Bỏ await thừa thãi khi return thẳng một Future
+    - unnecessary_null_aware_assignments # Bỏ gán giá trị null thừa thãi (như var x = null;)
+    - use_build_context_synchronously # CỰC KỲ QUAN TRỌNG: Cảnh báo dùng BuildContext sau các lệnh await (bảo vệ app không bị crash khi widget đã unmount)
+    - valid_regexps # Kiểm tra tính hợp lệ của chuỗi Regex ngay khi viết code
+
+    # --- Bổ sung thêm các luật chuyên sâu Flutter ---
+    - avoid_unnecessary_containers      # Khuyên bỏ Container nếu nó chỉ bọc ngoài một Widget khác mà không có styling
+    - sized_box_for_whitespace          # Khuyên dùng SizedBox thay vì Container trống chỉ để tạo khoảng cách
+    - use_key_in_widget_constructors    # Bắt buộc mọi Widget phải khai báo tham số Key (giúp Flutter định danh widget chính xác)
+    - no_logic_in_create_state          # Ngăn chặn viết logic xử lý trong hàm createState() của StatefulWidget
+    - use_full_hex_values_for_flutter_colors # Ép buộc dùng đủ 8 ký tự Hex cho Color (Ví dụ: 0xFFFFFFFF thay vì 0xFFFFF)
+    - prefer_interpolation_to_compose_strings # Khuyên dùng '$var' thay vì nối chuỗi kiểu 'a' + 'b'
+    - avoid_web_libraries_in_flutter    # Ngăn chặn import nhầm các thư viện web (dart:html) vào app mobile gây lỗi crash build
+    - prefer_void_to_null               # Khuyên dùng kiểu Void thay vì dùng Null làm kiểu trả về

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../config/app_config.dart';
+import 'package:weather/config/app_config.dart';
 
 /// Logger tối giản, TÔN TRỌNG cấu hình môi trường.
 ///

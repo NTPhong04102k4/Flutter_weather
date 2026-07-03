@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'config/app_config.dart';
-import 'core/core.dart';
+import 'package:weather/config/app_config.dart';
+import 'package:weather/core/core.dart';
 
 /// Widget gốc của app — chỉ lo cấu hình toàn cục:
 /// theme (sáng/tối), điều hướng, route khởi đầu và băng báo môi trường.

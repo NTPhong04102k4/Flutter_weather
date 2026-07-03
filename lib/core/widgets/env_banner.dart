@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../config/app_config.dart';
-import '../theme/app_colors.dart';
+import 'package:weather/config/app_config.dart';
+import 'package:weather/core/theme/app_colors.dart';
 
 /// Bọc app bằng dải băng góc màn hình báo môi trường (DEV / STAGING).
 ///

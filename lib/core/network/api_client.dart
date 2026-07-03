@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import '../constants/app_constants.dart';
-import 'api_exception.dart';
+import 'package:weather/core/constants/app_constants.dart';
+import 'package:weather/core/network/api_exception.dart';
 
 /// Lớp bọc (wrapper) mỏng quanh `package:http`.
 ///
@@ -18,8 +18,7 @@ import 'api_exception.dart';
 /// KHÔNG chứa logic nghiệp vụ (không biết "weather" là gì) — đó là việc của
 /// repository ở tầng feature. Đây thuần tuý là tầng truyền tải.
 class ApiClient {
-  ApiClient({http.Client? httpClient})
-      : _client = httpClient ?? http.Client();
+  ApiClient({http.Client? httpClient}) : _client = httpClient ?? http.Client();
 
   final http.Client _client;
 
@@ -54,8 +53,7 @@ class ApiClient {
     String path,
     Map<String, dynamic>? queryParameters,
   ) {
-    final normalizedPath =
-        path.startsWith('/') ? path.substring(1) : path;
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
     final base = Uri.parse(baseUrl);
 
     return base.replace(
@@ -74,10 +72,7 @@ class ApiClient {
     final code = response.statusCode;
 
     if (code < 200 || code >= 300) {
-      throw ApiException(
-        'Máy chủ trả về lỗi ($code).',
-        statusCode: code,
-      );
+      throw ApiException('Máy chủ trả về lỗi ($code).', statusCode: code);
     }
 
     if (response.body.isEmpty) return null;

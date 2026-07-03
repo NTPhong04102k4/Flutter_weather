@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../network/api_client.dart';
+import 'package:weather/core/network/api_client.dart';
 
 /// Cung cấp một [ApiClient] dùng chung cho toàn app (dependency injection).
 ///

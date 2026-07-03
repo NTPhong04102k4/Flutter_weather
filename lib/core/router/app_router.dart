@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../features/home/presentation/home_page.dart';
+import 'package:weather/features/home/presentation/home_page.dart';
 
 /// Tên các route — tránh gõ chuỗi tay rải rác (dễ sai chính tả).
 class AppRoutes {
