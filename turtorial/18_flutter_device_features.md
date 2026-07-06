@@ -411,6 +411,56 @@ DragTarget<String>(
 )
 ```
 
+### 4.1. GestureDetector nâng cao: behavior, arena & Listener
+
+**`behavior` — bắt chạm ở vùng trong suốt.** Mặc định `GestureDetector` chỉ bắt tap trên phần con **vẽ pixel**. Vùng trống (padding, `Container` không màu) sẽ **không** nhận tap:
+
+```dart
+GestureDetector(
+  behavior: HitTestBehavior.opaque,   // bắt tap trên TOÀN bộ vùng, kể cả trong suốt
+  onTap: () {},
+  child: Container(width: 200, height: 200),  // không có color → vẫn tap được
+)
+// translucent = bắt tap NHƯNG vẫn cho widget phía sau nhận; deferToChild (mặc định) = chỉ vùng con vẽ pixel
+```
+
+**Gesture Arena — vì sao gesture lồng nhau bị "nuốt".** Khi nhiều `GestureDetector` chồng lên nhau, Flutter mở một *đấu trường (arena)*: chỉ **một** recognizer thắng cho mỗi chuỗi chạm. VD `GestureDetector(onTap)` bọc `ListView` — cả hai cùng tranh drag/tap.
+
+```dart
+// ❌ onTap cha thường THUA scroll của ListView con → coi như không có tap
+// ✅ Muốn bắt tap "xuyên" mà không cản scroll: đặt GestureDetector Ở TỪNG item,
+//    hoặc dùng Listener (lớp thấp hơn, không tham gia arena).
+```
+
+**`Listener` — sự kiện con trỏ thô (raw pointer).** Nằm *dưới* lớp gesture, nhận mọi di chuyển con trỏ, **không** tranh arena → hữu ích khi cần tọa độ liên tục hoặc vẽ:
+
+```dart
+Listener(
+  onPointerDown: (e) => print('down ${e.position}'),
+  onPointerMove: (e) => print('move ${e.localPosition}'),
+  onPointerUp:   (e) => print('up'),
+  child: Container(color: Colors.amber, width: 300, height: 300),
+)
+```
+
+**`InkWell` vs `GestureDetector`.** Cần **hiệu ứng gợn sóng (ripple) Material** thì dùng `InkWell`/`InkResponse` (phải có `Material` phía trên); chỉ cần bắt cử chỉ thuần thì `GestureDetector`.
+
+```dart
+Material(
+  child: InkWell(
+    onTap: () {},
+    borderRadius: BorderRadius.circular(12),   // bo góc cho ripple
+    child: const Padding(padding: EdgeInsets.all(16), child: Text('Có ripple')),
+  ),
+)
+```
+
+| Widget | Ripple Material | Tham gia arena | Dùng khi |
+|--------|:---------------:|:--------------:|----------|
+| `GestureDetector` | ❌ | ✅ | Tap/drag/scale thường |
+| `InkWell` / `InkResponse` | ✅ | ✅ | Nút/list item cần feedback Material |
+| `Listener` | ❌ | ❌ (raw) | Cần tọa độ con trỏ liên tục, vẽ |
+
 ---
 
 ## PHẦN D: ANIMATION 🔥
@@ -597,6 +647,52 @@ class _ExplicitAnimDemoState extends State<ExplicitAnimDemo>
   }
 }
 ```
+
+### 6.1. TweenAnimationBuilder — animate 1 lần KHÔNG cần controller
+
+Khi chỉ cần chạy animation tới 1 giá trị mới mỗi khi state đổi (không loop/reverse), khỏi tạo controller:
+
+```dart
+TweenAnimationBuilder<double>(
+  tween: Tween(begin: 0, end: _targetOpacity),   // đổi end → tự animate lại
+  duration: const Duration(milliseconds: 400),
+  curve: Curves.easeOut,
+  builder: (context, value, child) => Opacity(opacity: value, child: child),
+  child: const Text('Fade in'),   // child không rebuild mỗi frame
+)
+```
+
+### 6.2. Staggered — nhiều animation lệch pha trên 1 controller
+
+Dùng `Interval` để mỗi thuộc tính chạy trong một **khoảng thời gian con** của controller (0.0 → 1.0):
+
+```dart
+// 1 controller, 2 giai đoạn: fade (0–50%) rồi trượt lên (50–100%)
+_opacity = Tween(begin: 0.0, end: 1.0).animate(
+  CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5)),
+);
+_slide = Tween(begin: const Offset(0, .3), end: Offset.zero).animate(
+  CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0, curve: Curves.easeOut)),
+);
+```
+
+### 6.3. Lắng nghe trạng thái & chạy chuỗi
+
+```dart
+_controller.addStatusListener((status) {
+  if (status == AnimationStatus.completed) _controller.reverse();   // ping-pong
+  if (status == AnimationStatus.dismissed)  _controller.forward();
+});
+
+// Điều khiển thường dùng:
+_controller.forward();               // 0 → 1
+_controller.reverse();               // 1 → 0
+_controller.repeat(reverse: true);   // lặp qua lại
+_controller.stop();
+_controller.value = 0.5;             // nhảy tới giữa
+```
+
+> 💡 **AnimatedBuilder vs AnimatedWidget**: cả hai chỉ rebuild phần được bọc (không rebuild cả cây). `AnimatedBuilder` (§6) tiện cho dùng nhanh trong `build`; `AnimatedWidget` tách thành class riêng khi widget động dùng lại nhiều nơi. Luôn truyền phần tĩnh vào `child:` để nó **không** rebuild mỗi frame.
 
 ---
 

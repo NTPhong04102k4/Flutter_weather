@@ -431,6 +431,101 @@ class SliverDemo extends StatelessWidget {
 }
 ```
 
+### 4.1. ScrollController — điều khiển & quan sát cuộn
+
+`ScrollController` cho phép đọc vị trí, cuộn tới điểm bất kỳ, và phát hiện chạm đáy (để phân trang):
+
+```dart
+class _FeedState extends State<Feed> {
+  final _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      final pos = _controller.position;
+      // Cách vị trí đáy < 300px → tải thêm (infinite scroll)
+      if (pos.pixels >= pos.maxScrollExtent - 300 && !_loading) {
+        _loadMore();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();   // BẮT BUỘC
+    super.dispose();
+  }
+
+  void _scrollToTop() => _controller.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );   // hoặc _controller.jumpTo(0) để nhảy tức thì
+
+  @override
+  Widget build(BuildContext context) => ListView.builder(
+        controller: _controller,      // gắn controller
+        itemCount: _items.length,
+        itemBuilder: (_, i) => ListTile(title: Text(_items[i])),
+      );
+}
+```
+
+### 4.2. NotificationListener — nghe sự kiện cuộn không cần controller
+
+```dart
+NotificationListener<ScrollNotification>(
+  onNotification: (n) {
+    if (n is ScrollStartNotification) {} // bắt đầu cuộn (ẩn FAB...)
+    if (n is ScrollEndNotification)   {} // ngừng cuộn
+    if (n is OverscrollNotification)  {} // cuộn quá mép
+    return false;   // false = cho notification tiếp tục nổi lên trên
+  },
+  child: ListView(children: const [/* ... */]),
+)
+```
+
+### 4.3. Pull-to-refresh & physics
+
+```dart
+RefreshIndicator(
+  onRefresh: () async {           // PHẢI trả Future — spinner ẩn khi future xong
+    await _reload();
+  },
+  child: ListView(
+    // Luôn cuộn được để kéo refresh, kể cả khi ít item:
+    physics: const AlwaysScrollableScrollPhysics(),
+    children: const [/* ... */],
+  ),
+)
+
+// ScrollPhysics thường dùng:
+// BouncingScrollPhysics       → nảy kiểu iOS
+// ClampingScrollPhysics       → dừng cứng kiểu Android
+// NeverScrollableScrollPhysics→ khóa cuộn (VD ListView trong ListView)
+```
+
+### 4.4. NestedScrollView — SliverAppBar + TabBar cuộn đồng bộ
+
+Header co lại khi cuộn, phần thân là các tab cuộn độc lập (giống trang profile):
+
+```dart
+NestedScrollView(
+  headerSliverBuilder: (context, innerBoxScrolled) => [
+    SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      flexibleSpace: const FlexibleSpaceBar(title: Text('Hồ sơ')),
+      bottom: const TabBar(tabs: [Tab(text: 'Bài viết'), Tab(text: 'Ảnh')]),
+    ),
+  ],
+  body: const TabBarView(children: [PostsTab(), PhotosTab()]),
+)
+```
+
+> 💡 **Hiệu năng**: luôn dùng `ListView.builder`/`GridView.builder` (lazy — chỉ dựng item trong tầm nhìn) thay cho `ListView(children: [...])` khi danh sách dài. `ListView.separated` khi cần dải phân cách.
+
 ---
 
 ## 5. Responsive Design

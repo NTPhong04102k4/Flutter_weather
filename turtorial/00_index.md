@@ -92,6 +92,14 @@
 
 ---
 
+### 🏛️ Tài Liệu Bổ Trợ: Kiến Trúc Hệ Thống *(nền tảng — nên đọc song song)*
+
+| Chủ đề | Mô tả |
+|:-------|:------|
+| [System Architecture](./System_Architecture/00_index.md) | Phần cứng (CPU/GPU/RAM/ROM), Hệ điều hành, **phân biệt Process/Thread/Service**, Concurrency vs Parallelism, Isolate & mô hình luồng Flutter |
+
+---
+
 ## ⏱️ Tổng thời gian ước tính: **~55 giờ** (~6-9 tuần nếu học 1-2h/ngày)
 
 ---

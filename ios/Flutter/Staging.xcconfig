@@ -1,5 +1,0 @@
-// Cấu hình iOS cho môi trường STAGING.
-#include "Generated.xcconfig"
-
-APP_DISPLAY_NAME = Weather Staging
-PRODUCT_BUNDLE_IDENTIFIER_SUFFIX = .staging
