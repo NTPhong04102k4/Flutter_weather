@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:weather/features/auth/presentation/login_page.dart';
 import 'package:weather/features/home/presentation/home_page.dart';
 
 /// Tên các route — tránh gõ chuỗi tay rải rác (dễ sai chính tả).
@@ -7,6 +8,7 @@ class AppRoutes {
   const AppRoutes._();
 
   static const String home = '/';
+  static const String login = '/login';
 }
 
 /// Bộ định tuyến tập trung của app.
@@ -20,6 +22,8 @@ class AppRouter {
     switch (settings.name) {
       case AppRoutes.home:
         return _page(const HomePage(), settings);
+      case AppRoutes.login:
+        return _page(const LoginPage(), settings);
       default:
         return _page(_UnknownRoutePage(name: settings.name), settings);
     }

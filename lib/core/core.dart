@@ -4,6 +4,16 @@
 /// constants, theme, error handling, network và shared widgets.
 library;
 
+export 'auth/auth_api_client.dart';
+export 'auth/auth_channel.dart';
+export 'auth/auth_exception.dart';
+export 'auth/auth_providers.dart';
+export 'auth/fake_auth_channel.dart';
+export 'auth/models/auth_journey.dart';
+export 'auth/models/fr_callback.dart';
+export 'auth/models/fr_node.dart';
+export 'auth/session_event_bus.dart';
+export 'auth/tenant_context.dart';
 export 'constants/app_constants.dart';
 export 'error/failure.dart';
 export 'error/result.dart';

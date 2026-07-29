@@ -97,6 +97,8 @@
 | Chủ đề | Mô tả |
 |:-------|:------|
 | [System Architecture](./System_Architecture/00_index.md) | Phần cứng (CPU/GPU/RAM/ROM), Hệ điều hành, **phân biệt Process/Thread/Service**, Concurrency vs Parallelism, Isolate & mô hình luồng Flutter |
+| [Auth Native (Login/Logout)](./Auth_Native/00_state_management_decision.md) | Port flow **login/logout native** (ForgeRock qua MethodChannel) từ `app-hrm` sang `weather`; **so sánh Riverpod vs BLoC vs GetX** & quyết định state management |
+| [Auth Native — Bộ công cụ, `tenantId` & Header](./Auth_Native/01_auth_toolkit_and_tenant_header.md) | Bộ công cụ auth đã gom vào `weather`; **vì sao cần lớp xử lí** thay vì dùng `MethodChannel`/`http` sẵn có hay `flutter_appauth`/`dio`; đường đi của `tenantId` và header qua lớp auth tới SDK ForgeRock |
 
 ---
 
